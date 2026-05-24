@@ -1,6 +1,7 @@
 # Розвивання віртуального асистента з CLI
 from collections import UserDict
 from datetime import datetime, timedelta # імпортуємо модуль для роботи з датами, оскільки нам потрібно буде обробляти дні народження
+import pickle # імпортуємо модуль для збереження даних адресної книги у файл, щоб вони не губилися при закритті програми
 
 
 class Field:# базовий клас для полів, який буде використовуватися для створення конкретних типів полів, таких як Name, Phone та Birthday
@@ -176,12 +177,23 @@ def birthdays(args, book: AddressBook):
     if not upcoming:
         return "No upcoming birthdays in the next 7 days."
     return "\n".join([f"{item['name']}: {item['congratulation_date']}" for item in upcoming])
+#Функції для збереження та завантаження даних адресної книги у файл, щоб вони не губилися при закритті програми
+def save_data(book, filename="addressbook.pkl"):
+    with open(filename, "wb") as f:
+        pickle.dump(book, f)
+
+def load_data(filename="addressbook.pkl"):
+    try:
+        with open(filename, "rb") as f:
+            return pickle.load(f)
+    except FileNotFoundError:
+        return AddressBook()
 
 
 #Головний цикл бота 
-
+#Тут ми завантажуємо дані адресної книги з файлу при запуску програми, а також зберігаємо їх у файл при виході з програми, щоб вони не губилися
 def main():
-    book = AddressBook()
+    book = load_data()
     print("Welcome to the assistant bot!")
     
     while True:
@@ -192,6 +204,7 @@ def main():
         command, *args = parse_input(user_input)
 
         if command in ["close", "exit"]:
+            save_data(book)
             print("Good bye!")
             break
         elif command == "hello":
